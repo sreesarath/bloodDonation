@@ -66,7 +66,7 @@ const DonorRegisterForm = () => {
     data.append('bloodgroup', formData.bloodGroup)
     data.append('weight', formData.weight)
     data.append('gender', formData.gender)
-    data.append('mobile', formData.phone)
+    data.append('phone', formData.phone)
     data.append('lastDonated', formData.lastDonated)
     data.append('idProof', formData.idProof)
 
