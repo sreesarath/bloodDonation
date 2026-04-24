@@ -54,11 +54,11 @@ const header={
 }
 return await commonApi(`${base_url}/nearby-request?lat=${lat}&lng=${lng}`,'GET',null,header)
  }
- export const acceptRequestApi=async(id,token)=>{
+ export const acceptRequestApi=async(id,data,token)=>{
      const header = {
     Authorization: `Bearer ${token}`
    }
-    return await commonApi(`${base_url}/accept-request/${id}`,'PUT',{},header)
+    return await commonApi(`${base_url}/accept-request/${id}`,'PUT',data,header)
  }
 export const rejectRequestApi=async(id,data,token)=>{
     const header={
