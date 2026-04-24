@@ -1,0 +1,18 @@
+@import "tailwindcss";
+*{
+  font-family: "Lora", serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+@keyframes float {
+  0% { transform: translateY(45px); }
+  50% { transform: translateY(60px); }
+  100% { transform: translateY(45px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.input-style {
+  @apply w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all;
+}
