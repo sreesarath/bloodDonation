@@ -4,59 +4,70 @@ import Header from '../Components/Header';
 import ProtectedPage from './ProtectedPage';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
-import { createRequestApi, getMyRequestApi, deleteRequestApi } from '../Services/AllApi';
+import { createRequestApi, getMyRequestApi, deleteRequestApi, rateDonorApi } from '../Services/AllApi';
 import socket from '../Services/socket';
-
-// Skeleton Loader Component
-const RequestSkeleton = () => (
-  <div className="grid md:grid-cols-2 gap-6 animate-pulse">
-    {[1, 2].map((i) => (
-      <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-48" />
-    ))}
-  </div>
-);
 
 const BloodRequest = () => {
   const [form, setForm] = useState({ hospital: "", bloodgroup: "O+", unitsNeeded: 1, startDate: "", endDate: "" });
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [showRating, setShowRating] = useState(false);
+  const [selectedDonor, setSelectedDonor] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
 
   const getToken = () => {
     const token = sessionStorage.getItem("token");
     return (!token || token === "undefined" || token === "null") ? null : token;
   };
 
+  const openRatingModal = (donor) => {
+    setSelectedDonor(donor);
+    setShowRating(true);
+  };
+
   const fetchRequests = async () => {
     setFetching(true);
     const token = getToken();
-    if (!token) return;
+    if (!token) { setFetching(false); return; }
     try {
       const res = await getMyRequestApi(token);
       if (res.status === 200) setRequests(res.data.data || []);
-    } catch (err) {
-      toast.error("Failed to load your requests");
-    } finally {
-      setFetching(false);
-    }
+    } catch (err) { toast.error("Failed to load your requests"); } finally { setFetching(false); }
   };
 
   useEffect(() => {
     fetchRequests();
-    socket.on("requestAccepted", () => {
-      toast.success("🎉 A donor accepted your request!");
-      fetchRequests();
-    });
-    return () => socket.off("requestAccepted");
+    const handler = () => { toast.success("🎉 A donor accepted your request!"); fetchRequests(); };
+    socket.on("requestAccepted", handler);
+    return () => socket.off("requestAccepted", handler);
   }, []);
+
+  const handleRatingSubmit = async () => {
+    const token = getToken();
+    try {
+      const res = await rateDonorApi(selectedDonor.requestId, { donorId: selectedDonor.donorId, rating, review }, token);
+      if (res.status === 200) {
+        toast.success("Rated successfully ⭐");
+        setShowRating(false); setRating(0); setReview(""); setSelectedDonor(null); fetchRequests();
+      }
+    } catch (err) { toast.error("Rating failed"); }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     const token = getToken();
-
     navigator.geolocation.getCurrentPosition(async (pos) => {
-      const reqBody = { ...form, lat: pos.coords.latitude, lng: pos.coords.longitude };
+      const reqBody = {
+  ...form,
+  unitsNeeded: Number(form.unitsNeeded), // ensure number
+  startDate: form.startDate || new Date(), 
+  endDate: form.endDate || new Date(Date.now() + 86400000), // +1 day
+  lat: pos.coords.latitude,
+  lng: pos.coords.longitude
+};
       try {
         const res = await createRequestApi(reqBody, token);
         if (res.status === 201) {
@@ -64,11 +75,7 @@ const BloodRequest = () => {
           setForm({ hospital: "", bloodgroup: "O+", unitsNeeded: 1, startDate: "", endDate: "" });
           fetchRequests();
         }
-      } catch (err) {
-        toast.error("Failed to send request");
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { toast.error("Failed to send request"); } finally { setLoading(false); }
     });
   };
 
@@ -82,7 +89,6 @@ const BloodRequest = () => {
       cancelButtonColor: "#94a3b8",
       confirmButtonText: "Yes, Remove"
     });
-
     if (result.isConfirmed) {
       const token = getToken();
       try {
@@ -91,184 +97,137 @@ const BloodRequest = () => {
           Swal.fire("Deleted!", "Request has been removed.", "success");
           fetchRequests();
         }
-      } catch (err) {
-        toast.error("Delete failed");
-      }
+      } catch (err) { toast.error("Delete failed"); }
     }
   };
 
   return (
     <ProtectedPage>
+      {/* Rating Modal */}
+      {showRating && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-300">
+            <h3 className="text-xl font-black mb-1 text-slate-800">Rate Donor</h3>
+            <p className="text-sm text-slate-400 mb-6">Your feedback helps others trust donors</p>
+            <div className="flex justify-center gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map(star => (
+                <span key={star} onClick={() => setRating(star)} className={`cursor-pointer text-3xl transition-all ${star <= rating ? "scale-110 text-yellow-400" : "text-gray-200 hover:text-yellow-200"}`}>★</span>
+              ))}
+            </div>
+            <textarea placeholder="Write your experience..." value={review} onChange={(e) => setReview(e.target.value)} className="w-full border border-slate-200 p-3 rounded-xl mb-6 focus:ring-2 focus:ring-yellow-400 outline-none transition" />
+            <div className="flex gap-2">
+              <button onClick={() => setShowRating(false)} className="flex-1 py-3 bg-slate-100 rounded-xl font-semibold text-slate-600 hover:bg-slate-200">Cancel</button>
+              <button onClick={handleRatingSubmit} disabled={!rating} className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold disabled:opacity-40 hover:bg-black transition">Submit</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen bg-slate-50">
         <Header />
         <main className="max-w-4xl mx-auto px-4 pt-24 pb-20">
-
           <div className="mb-10 text-center">
             <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Blood Requests</h1>
             <p className="text-slate-500 mt-2">Manage live requirements and connect with donors in real-time.</p>
           </div>
 
           {/* Broadcast Form */}
-          <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 mb-12">
+          <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-12">
             <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Plus className="text-red-600" size={20} />
-              </div>
+              <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Plus size={20} /></div>
               <h2 className="text-lg font-bold text-slate-800">New Broadcast</h2>
             </div>
-            
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-1">
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Hospital Name</label>
-                  <input type="text" placeholder="e.g. City General" value={form.hospital} onChange={e => setForm({ ...form, hospital: e.target.value })} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">Hospital Name</label>
+                  <input type="text" placeholder="City General" value={form.hospital} onChange={e => setForm({ ...form, hospital: e.target.value })} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" required />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Blood Group</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">Blood Group</label>
                   <select value={form.bloodgroup} onChange={e => setForm({ ...form, bloodgroup: e.target.value })} className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white">
                     {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map(g => <option key={g}>{g}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Units Required</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">Units Required</label>
                   <input type="number" min="1" value={form.unitsNeeded} onChange={e => setForm({ ...form, unitsNeeded: e.target.value })} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" />
                 </div>
               </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Start Date</label>
-                  <input type="date" onChange={(e) => setForm({ ...form, startDate: e.target.value })} value={form.startDate} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">End Date</label>
-                  <input type="date" onChange={(e) => setForm({ ...form, endDate: e.target.value })} value={form.endDate} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none" required />
-                </div>
-              </div>
-
               <button disabled={loading} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                 {loading ? <RefreshCw className="animate-spin" /> : <>Broadcast Request <CheckCircle size={18} /></>}
               </button>
             </form>
           </section>
 
-          {/* List Section */}
-  {/* List Section */}
-<h3 className="text-2xl font-bold mb-6 text-slate-800">
-  Your Active Broadcasts
-</h3>
+          {/* Active Broadcasts */}
+          <h3 className="text-2xl font-bold mb-6 text-slate-800">Your Active Broadcasts</h3>
+          {fetching ? (
+            <div className="text-center py-20 text-slate-400 animate-pulse">Loading requests...</div>
+          ) : requests.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-6">
+              {requests.map(req => {
+                const acceptedCount = req.donors?.length || 0;
+                const progressPercent = Math.min((acceptedCount / req.unitsNeeded) * 100, 100);
 
-{fetching ? (
-  <div className="text-center py-20 text-slate-400 animate-pulse">
-    <RefreshCw className="mx-auto mb-2 animate-spin" />
-    Loading your requests...
-  </div>
-) : requests.length > 0 ? (
-  <div className="grid md:grid-cols-2 gap-6">
-    {requests.map(req => (
-      <div
-        key={req._id}
-        className="group bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-      >
-        {/* HEADER */}
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-600 transition">
-              {req.hospital}
-            </h3>
-            <div className="flex items-center gap-1.5 text-sm text-slate-500 mt-1">
-              <MapPin size={14} /> Active Request
-            </div>
-          </div>
+                return (
+                  <div key={req._id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900">{req.hospital}</h3>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1 uppercase font-bold tracking-wider">
+                          <MapPin size={12} /> {req.bloodgroup}
+                        </div>
+                      </div>
+                      <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
+                        {req.status || 'Active'}
+                      </span>
+                    </div>
 
-          <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-            {req.bloodgroup}
-          </span>
-        </div>
+                    {/* Progress Indicator */}
+                    <div className="mt-4 mb-5">
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Progress</span>
+                        <span className="text-xs font-bold text-slate-700">{acceptedCount} / {req.unitsNeeded} Units</span>
+                      </div>
+                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
+                        <div className="bg-emerald-500 h-full transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }} />
+                      </div>
+                    </div>
 
-        {/* META INFO */}
-        <div className="flex flex-wrap gap-2 mb-5">
-          <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-3 py-1 rounded-lg">
-            Units: {req.unitsNeeded}
-          </span>
+                    {/* Donors List */}
+                    <div className="space-y-3">
+                      {req.donors?.map((d, i) => (
+                        <div key={i} className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">{d.name}</p>
+                            <p className={`text-[10px] font-bold uppercase ${d.status === "completed" ? "text-emerald-600" : "text-amber-600"}`}>
+                              {d.status}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            {d.status === "completed" && !d.rating && (
+                              <button onClick={() => openRatingModal(d)} className="text-[10px] font-bold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg hover:bg-yellow-200">Rate</button>
+                            )}
+                            <a href={`tel:${d.phone}`} className="text-slate-500 hover:text-slate-900"><Phone size={16} /></a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
 
-          <span className={`text-xs font-semibold px-3 py-1 rounded-lg 
-            ${req.status === "completed"
-              ? "bg-green-100 text-green-700"
-              : "bg-yellow-100 text-yellow-700"}`}>
-            {req.status}
-          </span>
-        </div>
-
-        {/* DONORS SECTION */}
-        <div className="border-t pt-4">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Users size={14} />
-            Accepted Donors ({req.donors?.length || 0})
-          </h4>
-
-          {req.donors?.length > 0 ? (
-            <div className="space-y-3">
-              {req.donors.map((d, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border hover:bg-white hover:shadow transition"
-                >
-                  {/* LEFT */}
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {d.name}
-                    </p>
-
-                    {d.date && (
-                      <p className="text-xs text-blue-600 flex items-center gap-1 mt-1">
-                        <Calendar size={12} />
-                        {new Date(d.date).toLocaleDateString()}
-                      </p>
-                    )}
+                    <button onClick={() => handleDelete(req._id)} className="w-full mt-6 text-xs text-slate-400 hover:text-red-500 font-bold transition flex items-center justify-center gap-2">
+                      <Trash2 size={14} /> Cancel Broadcast
+                    </button>
                   </div>
-
-                  {/* RIGHT */}
-                  <a
-                    href={`tel:${d.phone}`}
-                    className="text-xs bg-white border px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-100 flex items-center gap-1 font-medium"
-                  >
-                    <Phone size={12} />
-                    Call
-                  </a>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-sm text-slate-400 italic bg-slate-50 p-3 rounded-lg">
-              <AlertCircle size={14} />
-              No donors have accepted yet.
+            <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+              <Droplet size={48} className="mx-auto text-slate-300 mb-4" />
+              <h4 className="text-lg font-semibold text-slate-700">No active broadcasts</h4>
             </div>
           )}
-        </div>
-
-        {/* ACTION */}
-        <button
-          onClick={() => handleDelete(req._id)}
-          className="w-full mt-6 bg-red-50 text-red-600 hover:bg-red-100 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2"
-        >
-          <Trash2 size={16} />
-          Cancel Broadcast
-        </button>
-      </div>
-    ))}
-  </div>
-) : (
-  <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-    <Droplet size={48} className="mx-auto text-slate-300 mb-4" />
-    <h4 className="text-lg font-semibold text-slate-700">
-      No active broadcasts
-    </h4>
-    <p className="text-sm text-slate-400 mt-1">
-      Create a request to notify nearby donors.
-    </p>
-  </div>
-)}
         </main>
       </div>
     </ProtectedPage>

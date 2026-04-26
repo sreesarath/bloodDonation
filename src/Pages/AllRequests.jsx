@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Hospital, MapPin, Check, X, RefreshCw, Droplet, Calendar, AlertCircle } from 'lucide-react';
+import { Hospital, MapPin, Check, X, RefreshCw, Droplet, PhoneCall, Calendar, AlertCircle } from 'lucide-react';
 import Header from '../Components/Header';
 import ProtectedPage from './ProtectedPage';
 import { toast } from 'react-toastify';
-import { getNearbyRequestApi, acceptRequestApi, rejectRequestApi } from '../Services/AllApi';
+import { getNearbyRequestApi, acceptRequestApi, rejectRequestApi, completeDonationApi } from '../Services/AllApi';
+
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+
 
 const AllRequests = () => {
   const [requests, setRequests] = useState([]);
   const [reasons, setReasons] = useState({});
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState({});
-  
+
   const getToken = () => sessionStorage.getItem("token");
   const getUser = () => JSON.parse(sessionStorage.getItem("user") || "{}");
 
@@ -44,12 +46,16 @@ const AllRequests = () => {
   const handleAccept = async (id) => {
     const selectDate = selectedDate[id];
     if (!selectDate) return toast.info("Please select a donation date");
-    
+
     try {
-      const res = await acceptRequestApi(id, { scheduledDate: selectDate }, getToken());
+      const res = await acceptRequestApi(id, { scheduledDate: selectDate.toLocaleDateString() }, getToken());
       if (res.status === 200) {
         toast.success("Request Accepted!");
-        setRequests(prev => prev.filter(r => r._id !== id));
+
+        //storing requester info
+        const requesterInfo = res.data.requester
+        setRequests(prev => prev.map(val => val._id === id ? { ...val, requester: requesterInfo, accepted: true } : val));
+         fetchRequests();
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to accept");
@@ -70,6 +76,20 @@ const AllRequests = () => {
       toast.error(err.response?.data?.message || "Failed to reject");
     }
   };
+  const handleComplete = async (id) => {
+    try {
+      const res = await completeDonationApi(id, {}, getToken())
+      if (res.status === 200) {
+        toast.success("Donation marked as completed");
+        setRequests((val) => val.filter(D => D._id !== id))
+      }
+
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to update");
+
+    }
+  }
 
   const user = getUser();
 
@@ -94,7 +114,12 @@ const AllRequests = () => {
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
               {requests.map(req => {
-                const alreadyResponded = req.acceptedDonors?.some(d => d.donorId === user?._id);
+                const alreadyResponded = req.acceptedDonors?.some(
+                  d => (d.donorId?._id || d.donorId)?.toString() === user?._id
+                );
+                const myResponse = req.acceptedDonors?.find(
+                  d => (d.donorId?._id || d.donorId)?.toString() === user?._id
+                );
 
                 return (
                   <div key={req._id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
@@ -115,9 +140,29 @@ const AllRequests = () => {
                       </span>
                     </div>
 
-                    {alreadyResponded ? (
-                      <div className="bg-green-50 text-green-700 p-4 rounded-xl text-sm font-bold text-center flex items-center justify-center gap-2">
-                        <Check size={16} /> You have already responded
+
+                    {myResponse && myResponse.status === "accepted" ? (
+                      <div className='bg-green-50 p-4 rounded-xl space-y-3'>
+                        <p className='text-sm font-semibold text-green-700'>
+                          Request Accepted - Stay Connected With Requester
+                        </p>
+                        <p className="text-sm">
+                          👤 {req.userId?.name}
+                        </p>
+
+                        <a
+                          href={`tel:${req.userId?.phone}`}
+                          className="block text-center bg-white border py-2 rounded-lg text-sm font-medium"
+                        >
+                          📞 Call Requester
+                        </a>
+
+                        <button
+                          onClick={() => handleComplete(req._id)}
+                          className='w-full bg-green-600 text-white py-2 rounded-lg text-sm font-bold'
+                        >
+                          Mark as Donated
+                        </button>
                       </div>
                     ) : (
                       <div className="space-y-4 pt-4 border-t border-slate-100">
@@ -127,7 +172,7 @@ const AllRequests = () => {
                           className="w-full p-3 text-sm rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-red-100"
                           onChange={(e) => setReasons(prev => ({ ...prev, [req._id]: e.target.value }))}
                         />
-                        
+
                         <div className="relative">
                           <Calendar className="absolute left-3 top-3.5 text-slate-400 z-10" size={16} />
                           <DatePicker
@@ -142,8 +187,16 @@ const AllRequests = () => {
                         </div>
 
                         <div className="flex gap-2">
-                          <button onClick={() => handleAccept(req._id)} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-2 transition">
-                            <Check size={16} /> Accept
+                          <button
+                            disabled={alreadyResponded}
+                            onClick={() => handleAccept(req._id)}
+                            className={`flex-1 font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-2 transition
+                            ${alreadyResponded
+                                ? "bg-gray-300 cursor-not-allowed"
+                                : "bg-red-600 hover:bg-red-700 text-white"}`}
+                          >
+                            <Check size={16} />
+                            {alreadyResponded ? "Already Accepted" : "Accept"}
                           </button>
                           <button onClick={() => handleReject(req._id)} className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-2 transition">
                             <X size={16} /> Reject

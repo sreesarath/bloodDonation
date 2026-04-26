@@ -66,3 +66,15 @@ export const rejectRequestApi=async(id,data,token)=>{
     }
     return await commonApi(`${base_url}/reject-request/${id}`,'PUT',data,header)
 }
+export const completeDonationApi=async(id,data,token)=>{
+    const header={
+         Authorization: `Bearer ${token}`
+    }
+    return await commonApi(`${base_url}/complete-donation/${id}`,'PUT',data,header)
+}
+export const rateDonorApi = async (id, data, token) => {
+  const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/rate-donor/${id}`, 'PUT', data, header)
+}
