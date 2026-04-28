@@ -6,12 +6,15 @@ import {
   Award, Zap, User, ArrowRight
 } from 'lucide-react';
 import { getAllDonorsApi } from '../Services/AllApi';
+import { useNavigate } from 'react-router-dom';
 
 const Donors = () => {
+  const navigate=useNavigate()
   const [donors, setDonors] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('All');
   const [maxDistance, setMaxDistance] = useState(100);
+
 
   const defaultProfile = (gender) => {
     if (gender === "Female") return "src/assets/femaleDonor.jpeg";
@@ -133,7 +136,7 @@ const Donors = () => {
             const eligible = checkEligibility(donor.lastDonated);
 
             return (
-              <div key={donor._id} className="bg-white rounded-[2.5rem] border border-slate-100 p-2 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group">
+              <div key={donor._id} onClick={()=>navigate(`/donorProfile/${donor.userId._id}`)} className="bg-white rounded-[2.5rem] border border-slate-100 p-2 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group">
                 <div className="bg-slate-50 rounded-[2rem] p-6 h-full flex flex-col">
                   
                   {/* Top Info */}

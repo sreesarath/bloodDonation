@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Hospital, RefreshCw, Trash2, Phone, Users, Droplet, MapPin, AlertCircle, Calendar, CheckCircle } from 'lucide-react';
+import { Plus, Hospital, RefreshCw, Trash2, Phone, Calendar, Droplet, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
 import Header from '../Components/Header';
 import ProtectedPage from './ProtectedPage';
 import { toast } from 'react-toastify';
@@ -61,13 +61,13 @@ const BloodRequest = () => {
     const token = getToken();
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const reqBody = {
-  ...form,
-  unitsNeeded: Number(form.unitsNeeded), // ensure number
-  startDate: form.startDate || new Date(), 
-  endDate: form.endDate || new Date(Date.now() + 86400000), // +1 day
-  lat: pos.coords.latitude,
-  lng: pos.coords.longitude
-};
+        ...form,
+        unitsNeeded: Number(form.unitsNeeded),
+        startDate: new Date(form.startDate),
+        endDate: new Date(form.endDate),
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
       try {
         const res = await createRequestApi(reqBody, token);
         if (res.status === 201) {
@@ -101,20 +101,25 @@ const BloodRequest = () => {
     }
   };
 
+  const formatDateOnly = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
   return (
     <ProtectedPage>
       {/* Rating Modal */}
       {showRating && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-300">
-            <h3 className="text-xl font-black mb-1 text-slate-800">Rate Donor</h3>
-            <p className="text-sm text-slate-400 mb-6">Your feedback helps others trust donors</p>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-300 border border-slate-100">
+            <h3 className="text-xl font-bold text-slate-800">Rate Donor</h3>
+            <p className="text-sm text-slate-500 mb-6">Your feedback helps others trust donors</p>
             <div className="flex justify-center gap-2 mb-6">
               {[1, 2, 3, 4, 5].map(star => (
                 <span key={star} onClick={() => setRating(star)} className={`cursor-pointer text-3xl transition-all ${star <= rating ? "scale-110 text-yellow-400" : "text-gray-200 hover:text-yellow-200"}`}>★</span>
               ))}
             </div>
-            <textarea placeholder="Write your experience..." value={review} onChange={(e) => setReview(e.target.value)} className="w-full border border-slate-200 p-3 rounded-xl mb-6 focus:ring-2 focus:ring-yellow-400 outline-none transition" />
+            <textarea placeholder="Write your experience..." value={review} onChange={(e) => setReview(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl mb-6 focus:ring-2 focus:ring-yellow-400 outline-none transition" />
             <div className="flex gap-2">
               <button onClick={() => setShowRating(false)} className="flex-1 py-3 bg-slate-100 rounded-xl font-semibold text-slate-600 hover:bg-slate-200">Cancel</button>
               <button onClick={handleRatingSubmit} disabled={!rating} className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold disabled:opacity-40 hover:bg-black transition">Submit</button>
@@ -126,32 +131,47 @@ const BloodRequest = () => {
       <div className="min-h-screen bg-slate-50">
         <Header />
         <main className="max-w-4xl mx-auto px-4 pt-24 pb-20">
-          <div className="mb-10 text-center">
-            <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Blood Requests</h1>
-            <p className="text-slate-500 mt-2">Manage live requirements and connect with donors in real-time.</p>
+          <div className="mb-10">
+            <h1 className="text-4xl font-black text-slate-900">Blood Requests</h1>
+            <p className="text-slate-500 mt-2">Manage your active broadcasts and track donor progress in real-time.</p>
           </div>
 
           {/* Broadcast Form */}
-          <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-12">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Plus size={20} /></div>
-              <h2 className="text-lg font-bold text-slate-800">New Broadcast</h2>
+          <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-12 relative overflow-hidden">
+             {/* Decorative Accent */}
+             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-500"></div>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-3 bg-red-50 text-red-600 rounded-2xl"><Plus size={24} /></div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">New Broadcast</h2>
+                <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Initiate a request</p>
+              </div>
             </div>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-1">
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">Hospital Name</label>
-                  <input type="text" placeholder="City General" value={form.hospital} onChange={e => setForm({ ...form, hospital: e.target.value })} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" required />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Hospital Name</label>
+                  <input type="text" placeholder="City General" value={form.hospital} onChange={e => setForm({ ...form, hospital: e.target.value })} className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" required />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">Blood Group</label>
-                  <select value={form.bloodgroup} onChange={e => setForm({ ...form, bloodgroup: e.target.value })} className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white">
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Blood Group</label>
+                  <select value={form.bloodgroup} onChange={e => setForm({ ...form, bloodgroup: e.target.value })} className="w-full p-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white">
                     {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map(g => <option key={g}>{g}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 tracking-wider">Units Required</label>
-                  <input type="number" min="1" value={form.unitsNeeded} onChange={e => setForm({ ...form, unitsNeeded: e.target.value })} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" />
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Units Required</label>
+                  <input type="number" min="1" value={form.unitsNeeded} onChange={e => setForm({ ...form, unitsNeeded: e.target.value })} className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Start Date</label>
+                  <input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none" required />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">End Date</label>
+                  <input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none" required />
                 </div>
               </div>
               <button disabled={loading} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
@@ -163,7 +183,9 @@ const BloodRequest = () => {
           {/* Active Broadcasts */}
           <h3 className="text-2xl font-bold mb-6 text-slate-800">Your Active Broadcasts</h3>
           {fetching ? (
-            <div className="text-center py-20 text-slate-400 animate-pulse">Loading requests...</div>
+            <div className="grid md:grid-cols-2 gap-6 animate-pulse">
+               {[1, 2].map(n => <div key={n} className="h-64 bg-slate-200 rounded-3xl" />)}
+            </div>
           ) : requests.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6">
               {requests.map(req => {
@@ -171,15 +193,15 @@ const BloodRequest = () => {
                 const progressPercent = Math.min((acceptedCount / req.unitsNeeded) * 100, 100);
 
                 return (
-                  <div key={req._id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
+                  <div key={req._id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg hover:border-red-100 transition-all duration-300">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-lg font-bold text-slate-900">{req.hospital}</h3>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1 uppercase font-bold tracking-wider">
+                        <div className="flex items-center gap-1 text-xs text-red-500 mt-1 font-bold">
                           <MapPin size={12} /> {req.bloodgroup}
                         </div>
                       </div>
-                      <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">
+                      <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
                         {req.status || 'Active'}
                       </span>
                     </div>
@@ -190,33 +212,39 @@ const BloodRequest = () => {
                         <span className="text-[10px] font-bold text-slate-400 uppercase">Progress</span>
                         <span className="text-xs font-bold text-slate-700">{acceptedCount} / {req.unitsNeeded} Units</span>
                       </div>
-                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
-                        <div className="bg-emerald-500 h-full transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }} />
+                      <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
+                        <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-full transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }} />
                       </div>
                     </div>
 
                     {/* Donors List */}
                     <div className="space-y-3">
                       {req.donors?.map((d, i) => (
-                        <div key={i} className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">{d.name}</p>
-                            <p className={`text-[10px] font-bold uppercase ${d.status === "completed" ? "text-emerald-600" : "text-amber-600"}`}>
-                              {d.status}
-                            </p>
+                        <div key={i} className="flex items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                              {d.name?.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-black">{d.name}</p>
+                              <p className={`text-[10px] font-bold uppercase ${d.status === "completed" ? "text-emerald-600" : "text-amber-600"}`}>
+                                {d.status}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex items-center gap-3">
+                             {d.date && <p className="text-[10px] text-slate-400 flex items-center gap-1"><Calendar size={10} /> {formatDateOnly(d.date)}</p>}
                             {d.status === "completed" && !d.rating && (
-                              <button onClick={() => openRatingModal(d)} className="text-[10px] font-bold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg hover:bg-yellow-200">Rate</button>
+                              <button onClick={() => openRatingModal(d)} className="text-[10px] font-bold bg-yellow-50 text-yellow-700 px-2 py-1 rounded-lg border border-yellow-100 hover:bg-yellow-100 transition">Rate</button>
                             )}
-                            <a href={`tel:${d.phone}`} className="text-slate-500 hover:text-slate-900"><Phone size={16} /></a>
+                            <a href={`tel:${d.phone}`} className="text-slate-400 hover:text-slate-900 transition"><Phone size={16} /></a>
                           </div>
                         </div>
                       ))}
                     </div>
 
-                    <button onClick={() => handleDelete(req._id)} className="w-full mt-6 text-xs text-slate-400 hover:text-red-500 font-bold transition flex items-center justify-center gap-2">
-                      <Trash2 size={14} /> Cancel Broadcast
+                    <button onClick={() => handleDelete(req._id)} className="w-full mt-6 text-xs text-slate-400 hover:text-red-500 font-bold transition flex items-center justify-center gap-2 group">
+                      <Trash2 size={14} /> <span className="group-hover:underline">Cancel Broadcast</span>
                     </button>
                   </div>
                 );
@@ -224,8 +252,11 @@ const BloodRequest = () => {
             </div>
           ) : (
             <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-              <Droplet size={48} className="mx-auto text-slate-300 mb-4" />
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                 <Droplet size={32} className="text-slate-300" />
+              </div>
               <h4 className="text-lg font-semibold text-slate-700">No active broadcasts</h4>
+              <p className="text-slate-400 text-sm mt-1">Start a new broadcast to see it here.</p>
             </div>
           )}
         </main>

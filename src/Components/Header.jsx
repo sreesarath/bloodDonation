@@ -12,6 +12,7 @@ const Header = () => {
     const [scrolled, setScrolled] = useState(false)
     const location = useLocation()
     const [user,setUser]=useState(null)
+    const [dropdown, setDropdown] = useState(false)
 
     // change header on scrolling
 useEffect(() => {
@@ -32,7 +33,7 @@ useEffect(() => {
         window.removeEventListener("userChanged", loadUser);
     };
 }, []);
-
+     const toggleDropdown = () => setDropdown(!dropdown);
     const handleLogOut=()=>{
         sessionStorage.removeItem('token')
         sessionStorage.removeItem('user')
@@ -88,26 +89,22 @@ useEffect(() => {
     <div className="h-6 w-[1px] bg-red-400/50 mx-2"></div>
 
     <div className='flex items-center gap-4'>
-        {user ? (
-            <div className="flex items-center gap-4">
-                {/* Profile Section */}
-                <div className="flex items-center gap-2 text-white">
-                    <img
-                        src={user.profile || "src/assets/userprofile.avif"}
-                        alt="dp"
-                        className="w-9 h-9 rounded-full object-cover border-2 border-white"
-                    />
-                    <span className="font-semibold">{user.name}</span>
-                </div>
-                {/* Logout Button */}
-                <button
-                    onClick={handleLogOut}
-                    className="bg-white text-red-600 hover:bg-red-50 px-4 py-2 rounded-xl font-bold text-sm transition-all active:scale-95"
-                >
-                    Logout
-                </button>
-            </div>
-        ) : (
+{user ? (
+                    <div className="relative">
+                        <button onClick={toggleDropdown} className="flex items-center gap-2 text-white hover:opacity-80 transition">
+                            <img src={user.profile || "src/assets/userprofile.avif"} className="w-9 h-9 rounded-full object-cover border-2 border-white" />
+                            <span className="font-semibold hidden md:block">{user.name}</span>
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {dropdown && (
+                            <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl py-2 z-50 border border-slate-100">
+                                <Link to="/profile" className="block px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium">My Profile</Link>
+                                <button onClick={handleLogOut} className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 font-medium">Logout</button>
+                            </div>
+                        )}
+                    </div>
+                ) : (
             <>
                 <Link 
                     className='text-white hover:text-red-200 text-sm font-semibold flex items-center gap-2' 

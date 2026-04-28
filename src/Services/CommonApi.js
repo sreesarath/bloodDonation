@@ -12,8 +12,10 @@ const commonApi = async (reqUrl, reqMethod, reqData, reqHeaders) => {
         config.data = reqData;
         // Only set application/json if the user didn't provide a different type 
         // (like multipart/form-data for image uploads)
-        if (!config.headers["Content-Type"]) {
-            config.headers["Content-Type"] = "application/json";
+       if (!(reqData instanceof FormData)) {
+            if (!config.headers["Content-Type"]) {
+                config.headers["Content-Type"] = "application/json";
+            }
         }
     }
 

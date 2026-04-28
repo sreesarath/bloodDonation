@@ -78,3 +78,39 @@ export const rateDonorApi = async (id, data, token) => {
   }
   return await commonApi(`${base_url}/rate-donor/${id}`, 'PUT', data, header)
 }
+export const getMyProfileApi=async(token)=>{
+   const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/getmyprofile`,'GET',"",header)
+}
+export const updateProfileApi=async(data,token)=>{
+   const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/updateprofile`,'PUT',data,header)
+}
+export const uploadImageApi=async(data,token)=>{
+   const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/uploadImg`,'POST',data,header,true)
+}
+export const deleteAccountApi=async(token)=>{
+   const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/delete-account`,'DELETE',"",header)
+}
+export const toggleAvailiblityApi=async(token)=>{
+   const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/toggle`,'PATCH',"",header)
+}
+export const getDonorByIdApi=async(id,token)=>{
+   const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/donorProfile/${id}`,'GET',null,header)
+}

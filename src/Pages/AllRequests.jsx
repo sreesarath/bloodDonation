@@ -48,7 +48,7 @@ const AllRequests = () => {
     if (!selectDate) return toast.info("Please select a donation date");
 
     try {
-      const res = await acceptRequestApi(id, { scheduledDate: selectDate.toLocaleDateString() }, getToken());
+      const res = await acceptRequestApi(id, { scheduledDate: selectDate.toISOString() }, getToken());
       if (res.status === 200) {
         toast.success("Request Accepted!");
 

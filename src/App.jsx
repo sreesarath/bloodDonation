@@ -17,6 +17,8 @@ import ApprovalPage from './Admin-Pages/ApprovalPage'
 import DonorsPage from './Admin-Pages/DonorsPage'
 import { ToastContainer } from 'react-toastify'
 import NotFound from './Pages/NotFound'
+import ProfilePage from './Pages/ProfilePage'
+import DonorProfile from './Pages/DonorProfile'
 
 
 
@@ -38,6 +40,9 @@ function App() {
       <Route path={'/request'} element={<BloodRequest/>}></Route>
       <Route path={'/donor-register'} element={<DonorResterForm/>}></Route>
        <Route path="/register" element={<Register/>} />
+       {/* userprofile */}
+       <Route path='/donorProfile/:id' element={<DonorProfile/>}></Route>
+       <Route path='/profile' element={<ProfilePage/>}></Route>
 
        {/* admin */}
 
