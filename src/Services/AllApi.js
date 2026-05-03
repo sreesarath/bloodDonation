@@ -114,3 +114,40 @@ export const getDonorByIdApi=async(id,token)=>{
   }
   return await commonApi(`${base_url}/donorProfile/${id}`,'GET',null,header)
 }
+export const getAdminDash=async(token,range)=>{
+const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/adminDash?range=${range}`,'GET',"",header)
+}
+export const genarateReportApi=async(token,range)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+} 
+return await commonApi(`${base_url}/admin-report?range=${range}`,'GET',"",header,false,"blob")
+
+}
+export const getPendingDonorsApi=async(token)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/pending-donors`,'GET',"",header)
+}
+export const approveDonorApi=async(id,token)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/admin-approved/${id}`,'PUT',"",header)
+}
+export const rejectDonorApi=async(id,token)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/admin-rejected/${id}`,'PUT',"",header)
+}
+export const getDonorRatingApi=async(id,token)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/avgRating/${id}`,'GET',null,header)
+}

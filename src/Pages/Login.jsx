@@ -30,7 +30,9 @@ const Login = () => {
     window.dispatchEvent(new Event("userChanged"));
       toast.success("Login Successfull !!!")
       setData({email:"",password:""})
-      if (res?.data?.role==="admin") {
+      console.log(res.data);
+      
+      if (res?.data?.user?.role==="admin") {
         navigate('/admin')
       }else{
         navigate('/')

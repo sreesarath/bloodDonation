@@ -10,13 +10,15 @@ import { donorRegiterApi } from '../Services/AllApi';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import ProtectedPage from './ProtectedPage';
+import { toast } from 'react-toastify';
+
 
 
 const DonorRegisterForm = () => {
   const navigate=useNavigate()
   const [isEligible, setIsEligible] = useState(true);
   const [formData, setFormData] = useState({
-    bloodGroup: '',
+    bloodgroup: '',
     weight: '',
     gender:'',
     phone: '',
@@ -40,7 +42,7 @@ const DonorRegisterForm = () => {
   }, []);
 
 
-  const bloodGroups = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
+  const bloodgroups = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
   const isValidMobile = /^[6-9]\d{9}$/.test(formData.phone);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ const DonorRegisterForm = () => {
     const data = new FormData();
 
     // Append all fields
-    data.append('bloodgroup', formData.bloodGroup)
+    data.append('bloodgroup', formData.bloodgroup)
     data.append('weight', formData.weight)
     data.append('gender', formData.gender)
     data.append('phone', formData.phone)
@@ -79,7 +81,7 @@ const DonorRegisterForm = () => {
     if (res.status === 201 || res.status === 200) {
       Swal.fire("Success", "You are now a registered donor!", "success");
       // Redirect or Reset
-      navigate('/donors')
+      navigate('/profile')
     }
   };
 
@@ -134,11 +136,11 @@ const DonorRegisterForm = () => {
                     <Droplets size={16} className="text-rose-500" /> Select Blood Group
                   </label>
                   <div className="grid grid-cols-4 gap-3">
-                    {bloodGroups.map(g => (
+                    {bloodgroups.map(g => (
                       <button
                         key={g}
-                        onClick={() => setFormData({ ...formData, bloodGroup: g })}
-                        className={`py-4 rounded-2xl font-black transition-all border-2 ${formData.bloodGroup === g
+                        onClick={() => setFormData({ ...formData, bloodgroup: g })}
+                        className={`py-4 rounded-2xl font-black transition-all border-2 ${formData.bloodgroup === g
                           ? 'bg-rose-600 border-rose-600 text-white shadow-lg shadow-rose-200'
                           : 'bg-white border-slate-100 text-slate-400 hover:border-rose-200 hover:text-rose-500'
                           }`}
@@ -194,7 +196,7 @@ const DonorRegisterForm = () => {
                       placeholder="98765 43210"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className={`w-full bg-slate-50 p-4 rounded-2xl border-none focus:ring-2 transition-all font-bold ${formData.mobile && !isValidMobile ? 'focus:ring-amber-500' : 'focus:ring-rose-500'
+                      className={`w-full bg-slate-50 p-4 rounded-2xl border-none focus:ring-2 transition-all font-bold ${formData.phone && !isValidMobile ? 'focus:ring-amber-500' : 'focus:ring-rose-500'
                         }`}
                     />
                   </div>
@@ -294,7 +296,7 @@ const DonorRegisterForm = () => {
             <button
               onClick={step === 3 ? handleSubmit : nextStep}
               disabled={
-                (step === 1 && (!formData.bloodGroup || !isValidMobile || !formData.weight || !formData.gender)) ||
+                (step === 1 && (!formData.bloodgroup || !isValidMobile || !formData.weight || !formData.gender)) ||
                 (step === 2 && !isEligible) ||
                 (step === 3 && !formData.idProof)
               }

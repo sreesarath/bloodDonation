@@ -16,3 +16,18 @@
 .input-style {
   @apply w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all;
 }
+/* Fix for the DatePicker Portal */
+#root-portal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+/* Ensure the calendar doesn't look transparent */
+.react-datepicker {
+  background-color: white !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}

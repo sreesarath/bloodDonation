@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Hospital, RefreshCw, Trash2, Phone, Calendar, Droplet, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Hospital, RefreshCw, Trash2, Phone, Calendar, Droplet, MapPin, CheckCircle, AlertCircle,Activity, History } from 'lucide-react';
 import Header from '../Components/Header';
 import ProtectedPage from './ProtectedPage';
 import { toast } from 'react-toastify';
@@ -16,6 +16,7 @@ const BloodRequest = () => {
   const [selectedDonor, setSelectedDonor] = useState(null);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
+  const [activeTab, setActiveTab] = useState('active');
 
   const getToken = () => {
     const token = sessionStorage.getItem("token");
@@ -100,7 +101,15 @@ const BloodRequest = () => {
       } catch (err) { toast.error("Delete failed"); }
     }
   };
-
+  const filteredRequests = requests.filter(req => {
+    if (activeTab === 'history') {
+      // Logic: Request is marked 'completed' or units needed are fully met
+      return req.status === 'completed' || (req.donors?.filter(d => d.status === 'completed').length >= req.unitsNeeded);
+    } else {
+      // Logic: Still active and looking for donors
+      return req.status !== 'completed' && (req.donors?.filter(d => d.status === 'completed').length < req.unitsNeeded);
+    }
+  });
   const formatDateOnly = (date) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -161,7 +170,7 @@ const BloodRequest = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Units Required</label>
-                  <input type="number" min="1" value={form.unitsNeeded} onChange={e => setForm({ ...form, unitsNeeded: e.target.value })} className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" />
+                  <input type="number" min="1" value={form.unitsNeeded} onChange={e => setForm({ ...form, unitsNeeded: Number(e.target.value) })} className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition" />
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
@@ -179,17 +188,34 @@ const BloodRequest = () => {
               </button>
             </form>
           </section>
-
-          {/* Active Broadcasts */}
-          <h3 className="text-2xl font-bold mb-6 text-slate-800">Your Active Broadcasts</h3>
+       
+          {/* Active Broadcasts  and completed */}
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-2xl font-bold text-slate-800">My Broadcasts</h3>
+            
+            <div className="bg-slate-200/60 p-1 rounded-2xl flex gap-1 border border-slate-200">
+                <button 
+                  onClick={() => setActiveTab('active')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'active' ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  <Activity size={14} /> Active
+                </button>
+                <button 
+                  onClick={() => setActiveTab('history')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  <History size={14} /> History
+                </button>
+            </div>
+          </div>
           {fetching ? (
             <div className="grid md:grid-cols-2 gap-6 animate-pulse">
                {[1, 2].map(n => <div key={n} className="h-64 bg-slate-200 rounded-3xl" />)}
             </div>
-          ) : requests.length > 0 ? (
+          ) : filteredRequests.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6">
-              {requests.map(req => {
-                const acceptedCount = req.donors?.length || 0;
+              {filteredRequests.map(req => {
+                const acceptedCount = req.donors?.filter(d => d.status === 'completed').length || 0;
                 const progressPercent = Math.min((acceptedCount / req.unitsNeeded) * 100, 100);
 
                 return (
@@ -202,50 +228,46 @@ const BloodRequest = () => {
                         </div>
                       </div>
                       <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                        {req.status || 'Active'}
+                        {activeTab === 'active' ? 'Live' : 'Closed'}
                       </span>
                     </div>
 
                     {/* Progress Indicator */}
                     <div className="mt-4 mb-5">
                       <div className="flex justify-between items-end mb-2">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">Progress</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Donation Goal</span>
                         <span className="text-xs font-bold text-slate-700">{acceptedCount} / {req.unitsNeeded} Units</span>
                       </div>
                       <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
-                        <div className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-full transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }} />
+                        <div className={`h-full transition-all duration-700 ${activeTab === 'active' ? 'bg-gradient-to-r from-red-400 to-rose-500' : 'bg-slate-400'}`} style={{ width: `${progressPercent}%` }} />
                       </div>
                     </div>
 
                     {/* Donors List */}
-                    <div className="space-y-3">
-                      {req.donors?.map((d, i) => (
-                        <div key={i} className="flex items-center justify-between bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+{req.donors?.map((d, i) => (
+                        <div key={i} className="flex items-center justify-between bg-slate-50/50 p-2 rounded-xl border border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">
                               {d.name?.charAt(0)}
                             </div>
-                            <div>
-                              <p className="text-sm font-semibold text-black">{d.name}</p>
-                              <p className={`text-[10px] font-bold uppercase ${d.status === "completed" ? "text-emerald-600" : "text-amber-600"}`}>
-                                {d.status}
-                              </p>
-                            </div>
+                            <span className="text-xs font-medium">{d.name}</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                             {d.date && <p className="text-[10px] text-slate-400 flex items-center gap-1"><Calendar size={10} /> {formatDateOnly(d.date)}</p>}
-                            {d.status === "completed" && !d.rating && (
-                              <button onClick={() => openRatingModal(d)} className="text-[10px] font-bold bg-yellow-50 text-yellow-700 px-2 py-1 rounded-lg border border-yellow-100 hover:bg-yellow-100 transition">Rate</button>
+                          <div className="flex gap-2">
+                            {d.status === "completed" && !d.rating  && (
+                              <button onClick={() => openRatingModal(d)} className="text-[10px] font-bold text-yellow-600 hover:underline">Rate</button>
                             )}
-                            <a href={`tel:${d.phone}`} className="text-slate-400 hover:text-slate-900 transition"><Phone size={16} /></a>
+                            <a href={`tel:${d.phone}`} className="text-slate-400"><Phone size={14} /></a>
                           </div>
                         </div>
                       ))}
                     </div>
 
-                    <button onClick={() => handleDelete(req._id)} className="w-full mt-6 text-xs text-slate-400 hover:text-red-500 font-bold transition flex items-center justify-center gap-2 group">
-                      <Trash2 size={14} /> <span className="group-hover:underline">Cancel Broadcast</span>
-                    </button>
+{activeTab === 'active' && (
+                      <button onClick={() => handleDelete(req._id)} className="w-full mt-4 py-2 text-xs text-slate-400 hover:text-red-500 font-bold flex items-center justify-center gap-2 transition">
+                        <Trash2 size={14} /> Stop Broadcast
+                      </button>
+                    )}
                   </div>
                 );
               })}
