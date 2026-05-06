@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Check, X, Clock, Mail, Phone, 
   User, ShieldAlert, ExternalLink, 
-  Loader2, Filter, Search 
+  Loader2, Eye 
 } from "lucide-react";
 import AdminLayout from '../Admin-component/AdminLayout';
 import { approveDonorApi, getPendingDonorsApi, rejectDonorApi } from '../Services/AllApi';
@@ -12,6 +12,10 @@ const ApprovalPage = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  
+  // Modal States
+  const [showModal, setShowModal] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState(null);
 
   useEffect(() => {
     fetchPendingDonors();
@@ -51,8 +55,45 @@ const ApprovalPage = () => {
     }
   };
 
+  // Helper to open modal
+  const openDoc = (docUrl) => {
+    setSelectedDoc(docUrl);
+    setShowModal(true);
+  };
+
   return (
     <AdminLayout>
+      {/* 1. DOCUMENT MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+              <h3 className="font-black text-xl text-slate-900">Identity Verification Document</h3>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X size={24} className="text-slate-500" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-auto bg-slate-50 p-6 flex justify-center">
+              {/* If it's an image */}
+              {selectedDoc?.match(/\.(jpeg|jpg|gif|png)$/) ? (
+                <img src={selectedDoc} alt="Identity Proof" className="max-w-full h-auto rounded-lg shadow-md" />
+              ) : (
+                /* If it's a PDF or other file (Embedded viewer) */
+                <iframe 
+                  src={selectedDoc} 
+                  className="w-full h-[70vh] rounded-lg border-none" 
+                  title="Document Preview"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
         <div>
@@ -121,14 +162,17 @@ const ApprovalPage = () => {
                     </div>
                   </div>
 
-                  {/* ID PROOF PREVIEW (Placeholder UI) */}
-                  <div className="inline-flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer">
-                    <div className="w-8 h-8 bg-white rounded-lg border border-slate-200 flex items-center justify-center">
-                      <ExternalLink size={14} className="text-slate-400" />
+                  {/* ID PROOF PREVIEW (TRIGGER MODAL) */}
+                  <div 
+                    onClick={() => openDoc(r.idProof)} // Use the actual field name from your DB (e.g., r.idProof)
+                    className="inline-flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer group/doc"
+                  >
+                    <div className="w-8 h-8 bg-white rounded-lg border border-slate-200 flex items-center justify-center group-hover/doc:border-rose-300 transition-colors">
+                      <Eye size={14} className="text-slate-400 group-hover/doc:text-rose-500" />
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Identity Verification</p>
-                      <p className="text-xs font-bold text-slate-700">View_Uploaded_Document.pdf</p>
+                      <p className="text-xs font-bold text-slate-700">Click to preview document</p>
                     </div>
                   </div>
                 </div>

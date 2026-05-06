@@ -19,6 +19,12 @@ import { ToastContainer } from 'react-toastify'
 import NotFound from './Pages/NotFound'
 import ProfilePage from './Pages/ProfilePage'
 import DonorProfile from './Pages/DonorProfile'
+import ReportIssue from './Pages/ReportIssue'
+import DonorComplaint from './Pages/DonorComplaint'
+import MyComplaints from './Pages/MyComplaints'
+import AdminComplaints from './Admin-Pages/AdminComplaints'
+
+
 
 
 
@@ -49,6 +55,13 @@ function App() {
          <Route path="/admin" element={<DashBoardPage/>} />
          <Route path="/admin-approval" element={<ApprovalPage/>} />
          <Route path="/admin-donors" element={<DonorsPage/>} />
+         <Route path="/admin-complaints" element={<AdminComplaints/>} />
+
+
+         {/* complaint */}
+         <Route path="/report/:donorId" element={<ReportIssue/>} />
+         <Route path="/donor-complaints" element={<DonorComplaint/>} />
+         <Route path="/my-complaints" element={<MyComplaints />} />
 
     {/* page not found */}
      <Route path="/*" element={<NotFound/>} />

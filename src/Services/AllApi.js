@@ -151,3 +151,58 @@ export const getDonorRatingApi=async(id,token)=>{
 }
 return await commonApi(`${base_url}/avgRating/${id}`,'GET',null,header)
 }
+export const deletedonorApi=async(id,token)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/delete-donor/${id}`,'DELETE',"",header)
+}
+export const createComplaintApi=async(data,token)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/create-complaint`,'POST',data,header)
+}
+export const getDonorComplaintApi=async(token)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/donor-complaint`,'GET',"",header)
+}
+export const respondComplaintApi=async(id,response,token)=>{
+ const header={
+  Authorization: `Bearer ${token}`
+}
+return await commonApi(`${base_url}/respond-complaint/${id}`,'PUT',{response},header)
+}
+export const getMyComplaintsApi = async (token) => {
+  const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/my-complaints`, 'GET', "", header)
+}
+
+export const escalateComplaintApi = async (id, token) => {
+  const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/escalate-complaint/${id}`, 'PUT', "", header)
+}
+export const resolveComplaintApi = async (id, token) => {
+  const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/resolve-complaint/${id}`, 'PUT', "", header)
+}
+export const getAdminComplaintApi = async ( token) => {
+  const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/admin-complaint`, 'GET', "", header)
+}
+export const takeActionApi = async ( id,action,token) => {
+  const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/admin-action/${id}`, 'PUT', {action}, header)
+}

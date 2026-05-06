@@ -3,7 +3,7 @@ import Header from '../Components/Header';
 import {
   Search, MapPin, Phone,
   MessageCircle, Filter, AlertCircle,
-  Award, Zap, User, ArrowRight
+  Award, Zap, User, ArrowRight,MoreVertical
 } from 'lucide-react';
 import { getAllDonorsApi } from '../Services/AllApi';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ const Donors = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('All');
   const [maxDistance, setMaxDistance] = useState(100);
-
+  const [openMenu,setOpenMenu]=useState(null)
 
   const defaultProfile = (gender) => {
     if (gender === "Female") return "src/assets/femaleDonor.jpeg";
@@ -26,12 +26,17 @@ const Donors = () => {
       try {
         const token = sessionStorage.getItem('token')
         const res = await getAllDonorsApi(token);
+        
+        
         if (res.status === 200) setDonors(res.data.data);
       } catch (err) {
         console.error("Failed to fetch donors", err);
       }
     };
     fetchDonors();
+   
+    
+
   }, []);
 
   const filteredDonors = useMemo(() => {
@@ -155,11 +160,47 @@ const Donors = () => {
                     </div>
                     
                     <div className="text-right">
+                      <div className='absolute top-7 right-3'>
+                        <button
+                        onClick={(e)=>{e.stopPropagation()
+                          setOpenMenu(openMenu===donor._id?null : donor._id)
+                        }}
+                        >
+                        <MoreVertical size={18} />
+                        </button>
+                          {openMenu === donor._id && (
+    <div className="absolute right-0 mt-2 w-40 bg-white shadow-xl rounded-xl border z-50">
+      
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/donorProfile/${donor.userId._id}`);
+        }}
+        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+      >
+        View Profile
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/report/${donor.userId._id}`);
+        }}
+        className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"
+      >
+        Report Issue
+      </button>
+
+    </div>
+  )}
+
+                      </div>
                       <span className="text-[10px] font-black text-slate-400 uppercase block mb-1">Blood Type</span>
                       <div className="bg-rose-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shadow-rose-200">
                         {donor.bloodgroup}
                       </div>
                     </div>
+                    
                   </div>
 
                   {/* Donor Name & Location */}

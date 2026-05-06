@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Mail, Phone, Droplet, Calendar,
-  Camera, Trash2, Award, MapPin, Loader2, Star, Edit3, ShieldCheck, Heart
+  Camera, Trash2, Award, MapPin, Loader2, Star, Edit3, ShieldCheck, Heart, X, Check
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
@@ -210,8 +210,8 @@ const ProfilePage = () => {
                     onClick={toggleAvailability}
                     disabled={!profile.isEligible}
                     className={`group relative flex items-center gap-2 px-8 py-3 rounded-2xl font-bold transition-all duration-300 ${profile.isEligible
-                        ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-200 hover:-translate-y-0.5"
-                        : "bg-slate-200 text-slate-500 cursor-not-allowed"
+                      ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-200 hover:-translate-y-0.5"
+                      : "bg-slate-200 text-slate-500 cursor-not-allowed"
                       }`}
                   >
                     <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${profile.isEligible ? 'bg-white' : 'bg-slate-400'}`}></div>
@@ -281,7 +281,20 @@ const ProfilePage = () => {
                           placeholder="Phone"
                         />
                       </div>
-                      <div className="space-y-1 md:col-span-2">
+
+                      {/* UPDATE LAST DONATED DATE */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400 ml-1 uppercase">Last Donated Date</label>
+                        <input
+                          type="date"
+                          max={new Date().toISOString().split("T")[0]}
+                          value={form.lastDonated ? new Date(form.lastDonated).toISOString().split('T')[0] : ""}
+                          onChange={(e) => setForm({ ...form, lastDonated: e.target.value })}
+                          className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-100 outline-none transition-all"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-400 ml-1 uppercase">Blood Group</label>
                         <select
                           value={form.bloodgroup || ""}
@@ -292,9 +305,10 @@ const ProfilePage = () => {
                           {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => <option key={bg}>{bg}</option>)}
                         </select>
                       </div>
+
                       <div className="flex gap-3 md:col-span-2 mt-4">
                         <button onClick={handleUpdate} className="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-colors">Save Changes</button>
-                        <button onClick={() => setEdit(false)} className="px-8 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors">Cancel</button>
+                        <button onClick={() => { setEdit(false); setForm(profile); }} className="px-8 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-colors">Cancel</button>
                       </div>
                     </div>
                   ) : (
@@ -307,7 +321,6 @@ const ProfilePage = () => {
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                             Email Address
                           </p>
-                          {/* break-all ensures the email wraps instead of overlapping */}
                           <p className="text-slate-700 font-semibold text-sm break-all leading-tight">
                             {profile.email}
                           </p>
@@ -323,6 +336,20 @@ const ProfilePage = () => {
                           </p>
                           <p className="text-slate-700 font-semibold text-sm leading-tight">
                             {profile.phone}
+                          </p>
+                        </div>
+                      </div>
+                      {/* VIEW LAST DONATED DATE IN READ-ONLY MODE */}
+                      <div className="flex items-start gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:border-red-100 transition-colors min-w-0">
+                        <div className="p-3 bg-red-50 text-red-500 rounded-xl shrink-0">
+                          <Calendar size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                            Last Donation Date
+                          </p>
+                          <p className="text-slate-700 font-semibold text-sm leading-tight">
+                            {profile.lastDonated ? new Date(profile.lastDonated).toLocaleDateString() : "No record"}
                           </p>
                         </div>
                       </div>
