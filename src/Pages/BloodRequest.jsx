@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Hospital, RefreshCw, Trash2, Phone, Calendar, Droplet, MapPin, CheckCircle, AlertCircle,Activity, History } from 'lucide-react';
+import { Plus, Hospital, RefreshCw, Trash2, Phone, Calendar, Droplet, MapPin, CheckCircle, AlertCircle, Activity, History } from 'lucide-react';
 import Header from '../Components/Header';
 import ProtectedPage from './ProtectedPage';
 import { toast } from 'react-toastify';
@@ -147,8 +147,8 @@ const BloodRequest = () => {
 
           {/* Broadcast Form */}
           <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 mb-12 relative overflow-hidden">
-             {/* Decorative Accent */}
-             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-500"></div>
+            {/* Decorative Accent */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-500"></div>
             <div className="flex items-center gap-3 mb-8">
               <div className="p-3 bg-red-50 text-red-600 rounded-2xl"><Plus size={24} /></div>
               <div>
@@ -188,29 +188,29 @@ const BloodRequest = () => {
               </button>
             </form>
           </section>
-       
+
           {/* Active Broadcasts  and completed */}
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-2xl font-bold text-slate-800">My Broadcasts</h3>
-            
+
             <div className="bg-slate-200/60 p-1 rounded-2xl flex gap-1 border border-slate-200">
-                <button 
-                  onClick={() => setActiveTab('active')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'active' ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  <Activity size={14} /> Active
-                </button>
-                <button 
-                  onClick={() => setActiveTab('history')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  <History size={14} /> History
-                </button>
+              <button
+                onClick={() => setActiveTab('active')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'active' ? 'bg-white text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <Activity size={14} /> Active
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <History size={14} /> History
+              </button>
             </div>
           </div>
           {fetching ? (
             <div className="grid md:grid-cols-2 gap-6 animate-pulse">
-               {[1, 2].map(n => <div key={n} className="h-64 bg-slate-200 rounded-3xl" />)}
+              {[1, 2].map(n => <div key={n} className="h-64 bg-slate-200 rounded-3xl" />)}
             </div>
           ) : filteredRequests.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6">
@@ -245,25 +245,28 @@ const BloodRequest = () => {
 
                     {/* Donors List */}
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-{req.donors?.map((d, i) => (
+                      {req.donors?.map((d, i) => (
                         <div key={i} className="flex items-center justify-between bg-slate-50/50 p-2 rounded-xl border border-slate-100">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">
                               {d.name?.charAt(0)}
                             </div>
                             <span className="text-xs font-medium">{d.name}</span>
+                            <span className="text-[10px] text-slate-400">
+                              {d.date ? new Date(d.date).toLocaleDateString() : "No date"}
+                            </span>
                           </div>
                           <div className="flex gap-2">
-                            {d.status === "completed" && !d.rating  && (
+                            {d.status === "completed" && !d.rating && (
                               <button onClick={() => openRatingModal(d)} className="text-[10px] font-bold text-yellow-600 hover:underline">Rate</button>
                             )}
-                            <a href={`tel:${d.phone}`} className="text-slate-400"><Phone size={14} /></a>
+                            <a href={`tel:${d.phone}`} className="text-slate-400 hover:text-green-700"><Phone size={14} /></a>
                           </div>
                         </div>
                       ))}
                     </div>
 
-{activeTab === 'active' && (
+                    {activeTab === 'active' && (
                       <button onClick={() => handleDelete(req._id)} className="w-full mt-4 py-2 text-xs text-slate-400 hover:text-red-500 font-bold flex items-center justify-center gap-2 transition">
                         <Trash2 size={14} /> Stop Broadcast
                       </button>
@@ -275,7 +278,7 @@ const BloodRequest = () => {
           ) : (
             <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                 <Droplet size={32} className="text-slate-300" />
+                <Droplet size={32} className="text-slate-300" />
               </div>
               <h4 className="text-lg font-semibold text-slate-700">No active broadcasts</h4>
               <p className="text-slate-400 text-sm mt-1">Start a new broadcast to see it here.</p>

@@ -199,7 +199,7 @@ const Donors = () => {
                       <div className="bg-rose-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shadow-rose-200">
                         {donor.bloodgroup}
                       </div>
-                    </div>
+                    </div>  
                     
                   </div>
 

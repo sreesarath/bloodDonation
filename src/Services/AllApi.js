@@ -206,3 +206,15 @@ export const takeActionApi = async ( id,action,token) => {
   }
   return await commonApi(`${base_url}/admin-action/${id}`, 'PUT', {action}, header)
 }
+export const sendOtpApi = async ( data,token) => {
+  const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/otp-send`, 'POST', data, header)
+}
+export const VerfifyOtpApi = async ( data,token) => {
+  const header = {
+    Authorization: `Bearer ${token}`
+  }
+  return await commonApi(`${base_url}/otp-verification`, 'POST', data, header)
+}

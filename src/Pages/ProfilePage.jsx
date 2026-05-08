@@ -14,8 +14,12 @@ import {
 } from '../Services/AllApi';
 import Header from '../Components/Header';
 import { io } from 'socket.io-client';
+import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
+
 
 const ProfilePage = () => {
+  const navigate=useNavigate()
   const [profile, setProfile] = useState({});
   const [form, setForm] = useState({});
   const [edit, setEdit] = useState(false);
@@ -115,14 +119,54 @@ const ProfilePage = () => {
     fetchProfile();
   };
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete your account? This action is permanent.")) {
-      await deleteAccountApi(token);
-      sessionStorage.clear();
-      window.location.href = "/";
+const handleDelete = async () => {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "This action is permanent. Your life-saver profile and data will be removed from the network.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e11d48',
+    cancelButtonColor: '#64748b',
+    confirmButtonText: 'Yes, delete my account',
+    cancelButtonText: 'No, keep it',
+    background: '#ffffff',
+    customClass: {
+      popup: 'rounded-[2rem]',
+      confirmButton: 'rounded-xl px-6 py-3 font-bold',
+      cancelButton: 'rounded-xl px-6 py-3 font-bold'
     }
-  };
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const token = sessionStorage.getItem("token")
 
+        const res = await deleteAccountApi(token);
+
+        if (res.status === 200) {
+          sessionStorage.clear();
+
+          await Swal.fire({
+            title: 'Deleted!',
+            text: 'Your account has been successfully removed.',
+            icon: 'success',
+            confirmButtonColor: '#e11d48',
+            customClass: { popup: 'rounded-[2rem]' }
+          });
+
+          window.location.href = "/";
+        }
+      } catch (error) {
+        console.log(error);
+        Swal.fire({
+          title: 'Error',
+          text: error.response?.data?.message || 'Failed to delete account',
+          icon: 'error',
+          confirmButtonColor: '#e11d48'
+        });
+      }
+    }
+  });
+};
   const getBadgeStyle = (badge) => {
     switch (badge) {
       case "Hero Donor": return "bg-amber-100 text-amber-700 ring-1 ring-amber-200";
