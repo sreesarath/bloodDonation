@@ -23,6 +23,7 @@ import ReportIssue from './Pages/ReportIssue'
 import DonorComplaint from './Pages/DonorComplaint'
 import MyComplaints from './Pages/MyComplaints'
 import AdminComplaints from './Admin-Pages/AdminComplaints'
+import AdminProfile from './Admin-Pages/AdminProfile'
 
 
 
@@ -56,6 +57,7 @@ function App() {
          <Route path="/admin-approval" element={<ApprovalPage/>} />
          <Route path="/admin-donors" element={<DonorsPage/>} />
          <Route path="/admin-complaints" element={<AdminComplaints/>} />
+         <Route path="/admin-profile" element={<AdminProfile/>} />
 
 
          {/* complaint */}

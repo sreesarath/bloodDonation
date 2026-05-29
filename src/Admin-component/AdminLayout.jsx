@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 
 import { BarChart3, Users, ShieldAlert, Menu, X, LogOut, Bell,MessageSquareQuote  } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 
 
 const AdminLayout = ({ children }) => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showNotifications,setShowNotifications]=useState(false)
+  const navigate=useNavigate()
 
 
 
@@ -118,7 +121,7 @@ const AdminLayout = ({ children }) => {
 
           <div className="flex items-center gap-4">
 
-            <button className="p-2 text-slate-400 hover:text-rose-600 transition-colors relative">
+            <button onClick={()=>setShowNotifications(!showNotifications)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors relative">
 
                <Bell size={22}/>
 
@@ -126,7 +129,7 @@ const AdminLayout = ({ children }) => {
 
             </button>
 
-            <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden">
+            <div onClick={()=>navigate('/admin-profile')} className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden">
 
                <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="profile" />
 
@@ -135,7 +138,24 @@ const AdminLayout = ({ children }) => {
           </div>
 
         </header>
+         {showNotifications && (
+  <div className="absolute right-20 mt-5 top-20 w-80 bg-white shadow-xl rounded-2xl p-4 z-50 border">
+    <h3 className="font-bold mb-3">Notifications</h3>
 
+    <div className="space-y-2 text-sm">
+      <div className="p-2 bg-slate-100 rounded-lg">New donor registered</div>
+      <div className="p-2 bg-slate-100 rounded-lg">Request approved</div>
+      <div className="p-2 bg-slate-100 rounded-lg">Complaint received</div>
+    </div>
+
+    <button 
+      onClick={() => setShowNotifications(false)}
+      className="mt-3 text-xs text-rose-500"
+    >
+      Close
+    </button>
+  </div>
+)}
 
 
         <main className="p-4 md:p-8 animate-in fade-in duration-500">
