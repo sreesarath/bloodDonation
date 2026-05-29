@@ -70,7 +70,7 @@ const Header = () => {
 
 
 
-        const socketInstance = io("http://localhost:5000");
+        const socketInstance = io("https://blooddonation-server-cbnq.onrender.com");
 
         const storedUser = JSON.parse(sessionStorage.getItem("user"));
 

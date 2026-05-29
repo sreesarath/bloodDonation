@@ -48,7 +48,7 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-    const socket = io("http://localhost:5000");
+    const socket = io("https://blooddonation-server-cbnq.onrender.com");
     const user = JSON.parse(sessionStorage.getItem("user"));
     if (user?._id) socket.emit("register", user._id);
 
