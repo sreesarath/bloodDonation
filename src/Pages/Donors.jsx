@@ -5,8 +5,10 @@ import {
   MessageCircle, Filter, AlertCircle,
   Award, Zap, User, ArrowRight,MoreVertical
 } from 'lucide-react';
+
 import { getAllDonorsApi } from '../Services/AllApi';
 import { useNavigate } from 'react-router-dom';
+import ProtectedPage from './ProtectedPage';
 
 const Donors = () => {
   const navigate=useNavigate()
@@ -58,6 +60,7 @@ const Donors = () => {
   };
 
   return (
+    <ProtectedPage>
     <div className="min-h-screen bg-[#F8FAFC]">
       <Header />
 
@@ -230,7 +233,7 @@ const Donors = () => {
                   <div className="mt-auto space-y-3">
                     <button
                       disabled={!eligible}
-                      onClick={() => eligible && (window.location.href = `tel:${donor.mobile}`)}
+                      onClick={() => eligible && (window.location.href = `tel:${donor.phone}`)}
                       className={`w-full py-4 rounded-2xl font-black flex items-center justify-center gap-3 transition-all ${
                         eligible 
                         ? 'bg-slate-900 text-white hover:bg-slate-800' 
@@ -244,7 +247,7 @@ const Donors = () => {
                     <button
                       onClick={() => {
                         const message = encodeURIComponent(`Hi ${donor.userId?.name}, I found your profile on the Blood Finder App. I need ${donor.bloodgroup} blood. Are you available to help?`);
-                        window.open(`https://wa.me/91${donor.mobile}?text=${message}`, '_blank');
+                        window.open(`https://wa.me/91${donor.phone}?text=${message}`, '_blank');
                       }}
                       className="w-full py-4 rounded-2xl font-black text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all flex items-center justify-center gap-3"
                     >
@@ -269,6 +272,7 @@ const Donors = () => {
         )}
       </main>
     </div>
+    </ProtectedPage>
   );
 };
 

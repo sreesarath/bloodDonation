@@ -170,7 +170,7 @@ const Home = () => {
 
               <img
 
-                src="src/assets/home-pageImg-2.avif"
+                src="https://tinyurl.com/3u4ysxep"
 
                 alt="Donation"
 
